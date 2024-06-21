@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КиноПоиск</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #ecf0f1;
+            --accent-color: #e74c3c;
+            --text-color: #34495e;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url('https://picsum.photos/3000/2050?random=2');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 2.8em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .search-container {
+            display: flex;
+            margin-bottom: 30px;
+        }
+
+        #search-input {
+            flex-grow: 1;
+            padding: 15px 20px;
+            font-size: 1.2em;
+            border: 2px solid var(--primary-color);
+            border-radius: 50px 0 0 50px;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #search-input:focus {
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #search-button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 0 50px 50px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #search-button:hover {
+            background-color: #c0392b;
+            transform: scale(1.05);
+        }
+
+        #result-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        #video-thumbnail {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        #video-thumbnail:hover {
+            transform: scale(1.03);
+        }
+
+        #video-title {
+            margin-top: 15px;
+            font-size: 1.3em;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loader i {
+            font-size: 3em;
+            color: var(--accent-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            width: 80%;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close-modal:hover {
+            color: #000;
+        }
+
+        #video-player {
+            width: 100%;
+            height: 450px;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2.2em;
+            }
+
+            #search-input, #search-button {
+                font-size: 1em;
+                padding: 12px;
+            }
+
+            #video-player {
+                height: 250px;
+            }
+
+            .modal-content {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" data-aos="fade-up">
+        <h1 data-aos="zoom-in">КиноПоиск</h1>
+        <div class="search-container" data-aos="fade-right">
+            <input type="text" id="search-input" placeholder="Введите название фильма...">
+            <button id="search-button"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="loader">
+            <i class="fas fa-spinner"></i>
+        </div>
+        <div id="result-container" data-aos="fade-up">
+            <img id="video-thumbnail" src="" alt="Video Thumbnail">
+            <p id="video-title"></p>
+        </div>
+    </div>
+
+    <div class="modal" id="video-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="video-player"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        AOS.init({
+            duration: 1000,
+            once: true
+        });
+
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const resultContainer = document.getElementById('result-container');
+        const videoThumbnail = document.getElementById('video-thumbnail');
+        const videoTitle = document.getElementById('video-title');
+        const loader = document.querySelector('.loader');
+        const videoModal = document.getElementById('video-modal');
+        const closeModal = document.querySelector('.close-modal');
+        const videoPlayerContainer = document.getElementById('video-player');
+
+        let player;
+
+        searchButton.addEventListener('click', searchVideo);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchVideo();
+            }
+        });
+
+        videoThumbnail.addEventListener('click', openVideoModal);
+        closeModal.addEventListener('click', closeVideoModal);
+        window.addEventListener('click', function(event) {
+            if (event.target == videoModal) {
+                closeVideoModal();
+            }
+        });
+
+        function searchVideo() {
+            const query = searchInput.value.trim() + ' русский трейлер';
+            if (query) {
+                loader.style.display = 'block';
+                resultContainer.style.display = 'none';
+
+                fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&key=AIzaSyASQfwHLxE2quCeBuKRtNT5Tq2hLKH5pXI&maxResults=1`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.items && data.items.length > 0) {
+                            const videoId = data.items[0].id.videoId;
+                            const title = data.items[0].snippet.title;
+                            const thumbnailUrl = data.items[0].snippet.thumbnails.high.url;
+
+                            videoThumbnail.src = thumbnailUrl;
+                            videoTitle.textContent = title;
+                            resultContainer.style.display = 'block';
+
+                            // Store videoId for later use
+                            videoThumbnail.dataset.videoId = videoId;
+                        } else {
+                            alert('Видео не найдено');
+                        }
+                        loader.style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Произошла ошибка при поиске видео');
+                        loader.style.display = 'none';
+                    });
+            }
+        }
+
+        function openVideoModal() {
+            const videoId = videoThumbnail.dataset.videoId;
+            if (videoId) {
+                videoModal.style.display = 'flex';
+                if (player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    player = new YT.Player('video-player', {
+                        height: '100%',
+                        width: '100%',
+                        videoId: videoId,
+                        playerVars: {
+                            'autoplay': 1,
+                            'modestbranding': 1,
+                            'rel': 0
+                        }
+                    });
+                }
+            }
+        }
+
+        function closeVideoModal() {
+            videoModal.style.display = 'none';
+            if (player) {
+                player.stopVideo();
+            }
+        }
+
+        // Dark mode toggle
+        const darkModeToggle = document.createElement('button');
+        darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        darkModeToggle.classList.add('fixed', 'top-4', 'right-4', 'bg-gray-200', 'dark:bg-gray-800', 'p-2', 'rounded-full', 'transition-colors', 'duration-200');
+        document.body.appendChild(darkModeToggle);
+
+        darkModeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            if (document.documentElement.classList.contains('dark')) {
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+
+        // Add dark mode styles
+        const darkModeStyles = document.createElement('style');
+        darkModeStyles.textContent = `
+            .dark body {
+                background-color: #1a202c;
+                color: #e2e8f0;
+            }
+            .dark .container {
+                background-color: rgba(26, 32, 44, 0.95);
+            }
+            .dark #search-input {
+                background-color: #2d3748;
+                color: #e2e8f0;
+                border-color: #4a5568;
+            }
+            .dark h1, .dark #video-title {
+                color: #e2e8f0;
+            }
+            .dark .modal-content {
+                background-color: #2d3748;
+                color: #e2e8f0;
+            }
+            .dark .close-modal {
+                color: #e2e8f0;
+            }
+            .dark .close-modal:hover {
+                color: #fff;
+            }
+        `;
+        document.head.appendChild(darkModeStyles);
+    </script>
+</body>
+  </html>
